@@ -14,8 +14,12 @@ const statusText = document.getElementById("status");
 const onlineCount = document.getElementById("onlineCount");
 
 const confirmBox = document.getElementById("confirmBox");
-const confirmLeaveBtn = document.getElementById("confirmLeaveBtn");
-const cancelLeaveBtn = document.getElementById("cancelLeaveBtn");
+const confirmTitle = document.getElementById("confirmTitle");
+const confirmMessage = document.getElementById("confirmMessage");
+const confirmActionBtn = document.getElementById("confirmActionBtn");
+const cancelActionBtn = document.getElementById("cancelActionBtn");
+
+let confirmAction = null;
 
 const themeSwitches = document.querySelectorAll(".themeSwitch");
 
@@ -95,30 +99,69 @@ messageInput.addEventListener("input", function () {
 });
 
 /* Next stranger */
-nextBtn.addEventListener("click", function () {
-    messages.innerHTML = "";
-    statusText.textContent = "Searching for a new stranger...";
-    connectedToStranger = false;
+/* Confirm popup */
+function showConfirm(title, message, buttonText, action) {
+    confirmTitle.textContent = title;
+    confirmMessage.textContent = message;
+    confirmActionBtn.textContent = buttonText;
+    confirmAction = action;
 
-    socket.emit("next");
+    confirmBox.style.display = "flex";
+}
+
+cancelActionBtn.addEventListener("click", function () {
+    confirmBox.style.display = "none";
+    confirmAction = null;
+});
+
+confirmActionBtn.addEventListener("click", function () {
+    confirmBox.style.display = "none";
+
+    if (confirmAction) {
+        confirmAction();
+    }
+
+    confirmAction = null;
+});
+
+/* Next stranger */
+nextBtn.addEventListener("click", function () {
+    showConfirm(
+        "Next stranger?",
+        "Current stranger will be disconnected. Do you want to find a new stranger?",
+        "Confirm Next",
+        function () {
+            messages.innerHTML = "";
+            statusText.textContent = "Searching for a new stranger...";
+            connectedToStranger = false;
+
+            socket.emit("next");
+        }
+    );
 });
 
 /* Report */
 reportBtn.addEventListener("click", function () {
-    socket.emit("report");
+    showConfirm(
+        "Report this stranger?",
+        "This report will be saved and you will be moved to a new chat.",
+        "Confirm Report",
+        function () {
+            socket.emit("report");
+        }
+    );
 });
 
-/* Leave confirmation */
+/* Leave */
 leaveBtn.addEventListener("click", function () {
-    confirmBox.style.display = "flex";
-});
-
-cancelLeaveBtn.addEventListener("click", function () {
-    confirmBox.style.display = "none";
-});
-
-confirmLeaveBtn.addEventListener("click", function () {
-    socket.emit("leave");
+    showConfirm(
+        "Leave this chat?",
+        "If you leave, this stranger will be disconnected.",
+        "Confirm to Leave",
+        function () {
+            socket.emit("leave");
+        }
+    );
 });
 
 function sendMessage() {

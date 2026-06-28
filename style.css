@@ -281,12 +281,12 @@ button:hover {
     color: var(--muted-text);
 }
 
-#confirmLeaveBtn {
+#confirmActionBtn {
     background: var(--report-button);
     margin-right: 10px;
 }
 
-#cancelLeaveBtn {
+#cancelActionBtn {
     background: var(--primary-color);
 }
 
