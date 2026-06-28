@@ -25,7 +25,7 @@ const TYPING_DELAY = 1000;
 
 startBtn.addEventListener("click", function () {
     home.style.display = "none";
-    chatContainer.style.display = "block";
+    chatContainer.style.display = "flex";
 
     messages.innerHTML = "";
     statusText.textContent = "Searching for a stranger...";

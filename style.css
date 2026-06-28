@@ -1,12 +1,18 @@
+* {
+    box-sizing: border-box;
+}
+
 body {
     margin: 0;
     font-family: Arial, sans-serif;
     background: #121212;
     color: white;
+    min-height: 100dvh;
     display: flex;
     justify-content: center;
     align-items: center;
-    height: 100vh;
+    padding: 12px;
+    overflow: hidden;
 }
 
 /* Home page */
@@ -15,7 +21,7 @@ body {
     background: #1e1e1e;
     padding: 40px;
     border-radius: 15px;
-    width: 350px;
+    width: min(350px, 100%);
 }
 
 .home h1 {
@@ -37,42 +43,52 @@ button {
     background: #00b894;
     color: white;
     border: none;
-    padding: 12px 22px;
+    padding: 12px 18px;
     font-size: 16px;
     border-radius: 8px;
     cursor: pointer;
+    white-space: nowrap;
 }
 
 button:hover {
-    transform: scale(1.05);
+    transform: scale(1.03);
 }
 
 /* Chat page */
 .chat-container {
     display: none;
+    flex-direction: column;
     background: #1e1e1e;
-    width: 420px;
-    height: 560px;
+    width: min(420px, 100%);
+    height: min(560px, calc(100dvh - 24px));
     border-radius: 15px;
     overflow: hidden;
 }
 
 .chat-header {
     background: #00b894;
-    padding: 15px;
+    padding: 12px;
     display: flex;
     justify-content: space-between;
     align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
 }
 
 .chat-header h2 {
     margin: 0;
     font-size: 22px;
+    white-space: nowrap;
 }
 
 .chat-header div {
     display: flex;
-    gap: 8px;
+    gap: 6px;
+}
+
+.chat-header button {
+    padding: 9px 10px;
+    font-size: 14px;
 }
 
 #reportBtn {
@@ -92,10 +108,12 @@ button:hover {
     text-align: center;
     color: #cccccc;
     border-bottom: 1px solid #333;
+    flex-shrink: 0;
 }
 
 .messages {
-    height: 390px;
+    flex: 1;
+    min-height: 0;
     padding: 15px;
     overflow-y: auto;
     overflow-x: hidden;
@@ -105,7 +123,7 @@ button:hover {
     padding: 10px;
     margin-bottom: 10px;
     border-radius: 8px;
-    max-width: 75%;
+    max-width: 85%;
     line-height: 1.4;
 
     overflow-wrap: anywhere;
@@ -125,11 +143,13 @@ button:hover {
 .chat-input {
     display: flex;
     border-top: 1px solid #333;
+    flex-shrink: 0;
 }
 
 .chat-input input {
     flex: 1;
-    padding: 15px;
+    min-width: 0;
+    padding: 14px;
     border: none;
     outline: none;
     font-size: 16px;
@@ -148,6 +168,7 @@ button:hover {
     justify-content: center;
     align-items: center;
     z-index: 999;
+    padding: 15px;
 }
 
 .confirm-content {
@@ -155,7 +176,7 @@ button:hover {
     padding: 25px;
     border-radius: 12px;
     text-align: center;
-    width: 300px;
+    width: min(300px, 100%);
 }
 
 .confirm-content h3 {
@@ -175,39 +196,46 @@ button:hover {
     background: #00b894;
 }
 
-/* Mobile view */
-@media (max-width: 600px) {
+/* Small mobiles */
+@media (max-width: 480px) {
     body {
-        padding: 10px;
-        height: 100vh;
+        padding: 8px;
     }
 
     .home {
-        width: 90%;
         padding: 30px 20px;
     }
 
     .home h1 {
-        font-size: 32px;
+        font-size: 30px;
     }
 
     .chat-container {
         width: 100%;
-        height: 95vh;
+        height: calc(100dvh - 16px);
         border-radius: 10px;
     }
 
+    .chat-header {
+        padding: 10px;
+    }
+
     .chat-header h2 {
-        font-size: 18px;
+        font-size: 17px;
     }
 
     .chat-header button {
-        padding: 8px 10px;
-        font-size: 13px;
+        padding: 8px 8px;
+        font-size: 12px;
     }
 
     .messages {
-        height: calc(95vh - 160px);
+        padding: 10px;
+    }
+
+    .message {
+        max-width: 90%;
+        font-size: 14px;
     }
 
     .chat-input input {
@@ -218,5 +246,21 @@ button:hover {
     .chat-input button {
         padding: 12px;
         font-size: 14px;
+    }
+}
+
+/* Very small mobiles */
+@media (max-width: 360px) {
+    .chat-header {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .chat-header h2 {
+        text-align: center;
+    }
+
+    .chat-header div {
+        justify-content: center;
     }
 }
