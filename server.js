@@ -14,7 +14,7 @@ let waitingUser = null;
 const partners = new Map();
 const lastMessageTime = new Map();
 
-const MAX_MESSAGE_LENGTH = 200;
+const MAX_MESSAGE_LENGTH = 1000;
 const MESSAGE_DELAY = 700;
 const REPORT_FILE = path.join(__dirname, "reports.txt");
 
@@ -89,7 +89,7 @@ function isMessageAllowed(socket, message) {
     const cleanMessage = message.trim();
 
     if (cleanMessage.length === 0 || cleanMessage.length > MAX_MESSAGE_LENGTH) {
-        socket.emit("warning", "Message must be between 1 and 200 characters.");
+        socket.emit("warning", "Message must be between 1 and 1000 characters.");
         return false;
     }
 
