@@ -207,6 +207,9 @@ button:hover {
     padding: clamp(10px, 2vw, 18px);
     overflow-y: auto;
     overflow-x: hidden;
+
+    display: flex;
+    flex-direction: column;
 }
 
 .message {
@@ -218,6 +221,10 @@ button:hover {
     overflow-wrap: anywhere;
     word-break: break-word;
     white-space: pre-wrap;
+}
+
+.message:first-child {
+    margin-top: auto;
 }
 
 .stranger {
