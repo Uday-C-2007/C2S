@@ -16,6 +16,7 @@ const lastMessageTime = new Map();
 
 const MAX_MESSAGE_LENGTH = 1000;
 const MESSAGE_DELAY = 700;
+
 const REPORT_FILE = path.join(__dirname, "reports.txt");
 
 function saveReport(reporterId, reportedId) {

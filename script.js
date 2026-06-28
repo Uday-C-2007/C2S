@@ -17,12 +17,46 @@ const confirmBox = document.getElementById("confirmBox");
 const confirmLeaveBtn = document.getElementById("confirmLeaveBtn");
 const cancelLeaveBtn = document.getElementById("cancelLeaveBtn");
 
+const themeSwitches = document.querySelectorAll(".themeSwitch");
+
 let connectedToStranger = false;
 
 let typingTimer;
 let strangerTypingTimer;
 const TYPING_DELAY = 1000;
 
+/* Theme setup */
+const savedTheme = localStorage.getItem("theme");
+
+if (savedTheme === "light") {
+    document.body.classList.add("light-mode");
+}
+
+updateThemeSwitches();
+
+themeSwitches.forEach(function (themeSwitch) {
+    themeSwitch.addEventListener("change", function () {
+        if (themeSwitch.checked) {
+            document.body.classList.add("light-mode");
+            localStorage.setItem("theme", "light");
+        } else {
+            document.body.classList.remove("light-mode");
+            localStorage.setItem("theme", "dark");
+        }
+
+        updateThemeSwitches();
+    });
+});
+
+function updateThemeSwitches() {
+    const isLight = document.body.classList.contains("light-mode");
+
+    themeSwitches.forEach(function (themeSwitch) {
+        themeSwitch.checked = isLight;
+    });
+}
+
+/* Start chat */
 startBtn.addEventListener("click", function () {
     home.style.display = "none";
     chatContainer.style.display = "flex";
@@ -34,6 +68,7 @@ startBtn.addEventListener("click", function () {
     socket.emit("findStranger");
 });
 
+/* Send message */
 sendBtn.addEventListener("click", function () {
     sendMessage();
 });
@@ -44,6 +79,7 @@ messageInput.addEventListener("keydown", function (event) {
     }
 });
 
+/* Typing indicator */
 messageInput.addEventListener("input", function () {
     if (!connectedToStranger) {
         return;
@@ -58,6 +94,7 @@ messageInput.addEventListener("input", function () {
     }, TYPING_DELAY);
 });
 
+/* Next stranger */
 nextBtn.addEventListener("click", function () {
     messages.innerHTML = "";
     statusText.textContent = "Searching for a new stranger...";
@@ -66,10 +103,12 @@ nextBtn.addEventListener("click", function () {
     socket.emit("next");
 });
 
+/* Report */
 reportBtn.addEventListener("click", function () {
     socket.emit("report");
 });
 
+/* Leave confirmation */
 leaveBtn.addEventListener("click", function () {
     confirmBox.style.display = "flex";
 });
@@ -112,6 +151,7 @@ function addMessage(text, type) {
     messages.scrollTop = messages.scrollHeight;
 }
 
+/* Socket events */
 socket.on("waiting", function () {
     statusText.textContent = "Waiting for a stranger...";
 });
