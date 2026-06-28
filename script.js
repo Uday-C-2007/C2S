@@ -19,11 +19,11 @@ const confirmMessage = document.getElementById("confirmMessage");
 const confirmActionBtn = document.getElementById("confirmActionBtn");
 const cancelActionBtn = document.getElementById("cancelActionBtn");
 
-let confirmAction = null;
-
 const themeSwitches = document.querySelectorAll(".themeSwitch");
 
 let connectedToStranger = false;
+let confirmAction = null;
+let backButtonLocked = false;
 
 let typingTimer;
 let strangerTypingTimer;
@@ -60,6 +60,74 @@ function updateThemeSwitches() {
     });
 }
 
+/* Back button control */
+function lockBackButton() {
+    if (!backButtonLocked) {
+        window.history.pushState({ chatOpen: true }, "", window.location.href);
+        backButtonLocked = true;
+    }
+}
+
+function unlockBackButton() {
+    backButtonLocked = false;
+}
+
+window.addEventListener("popstate", function () {
+    if (chatContainer.style.display === "flex") {
+        window.history.pushState({ chatOpen: true }, "", window.location.href);
+
+        if (confirmBox.style.display !== "flex") {
+            showConfirm(
+                "Leave this chat?",
+                "Do you want to go back to home page?",
+                "Confirm to Leave",
+                function () {
+                    socket.emit("leave");
+                }
+            );
+        }
+    }
+});
+
+/* Confirm popup */
+function showConfirm(title, message, buttonText, action) {
+    confirmTitle.textContent = title;
+    confirmMessage.textContent = message;
+    confirmActionBtn.textContent = buttonText;
+    confirmAction = action;
+
+    confirmBox.style.display = "flex";
+}
+
+cancelActionBtn.addEventListener("click", function () {
+    confirmBox.style.display = "none";
+    confirmAction = null;
+});
+
+confirmActionBtn.addEventListener("click", function () {
+    confirmBox.style.display = "none";
+
+    if (confirmAction) {
+        confirmAction();
+    }
+
+    confirmAction = null;
+});
+
+function goToHomePage() {
+    connectedToStranger = false;
+
+    confirmBox.style.display = "none";
+    chatContainer.style.display = "none";
+    home.style.display = "block";
+
+    messages.innerHTML = "";
+    messageInput.value = "";
+    statusText.textContent = "Searching...";
+
+    unlockBackButton();
+}
+
 /* Start chat */
 startBtn.addEventListener("click", function () {
     home.style.display = "none";
@@ -68,6 +136,8 @@ startBtn.addEventListener("click", function () {
     messages.innerHTML = "";
     statusText.textContent = "Searching for a stranger...";
     connectedToStranger = false;
+
+    lockBackButton();
 
     socket.emit("findStranger");
 });
@@ -96,32 +166,6 @@ messageInput.addEventListener("input", function () {
     typingTimer = setTimeout(function () {
         socket.emit("typing", false);
     }, TYPING_DELAY);
-});
-
-/* Next stranger */
-/* Confirm popup */
-function showConfirm(title, message, buttonText, action) {
-    confirmTitle.textContent = title;
-    confirmMessage.textContent = message;
-    confirmActionBtn.textContent = buttonText;
-    confirmAction = action;
-
-    confirmBox.style.display = "flex";
-}
-
-cancelActionBtn.addEventListener("click", function () {
-    confirmBox.style.display = "none";
-    confirmAction = null;
-});
-
-confirmActionBtn.addEventListener("click", function () {
-    confirmBox.style.display = "none";
-
-    if (confirmAction) {
-        confirmAction();
-    }
-
-    confirmAction = null;
 });
 
 /* Next stranger */
@@ -248,13 +292,5 @@ socket.on("typing", function (isTyping) {
 });
 
 socket.on("leftChat", function () {
-    connectedToStranger = false;
-
-    confirmBox.style.display = "none";
-    chatContainer.style.display = "none";
-    home.style.display = "block";
-
-    messages.innerHTML = "";
-    messageInput.value = "";
-    statusText.textContent = "Searching...";
+    goToHomePage();
 });
