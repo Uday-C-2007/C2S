@@ -114,7 +114,7 @@ button:hover {
 }
 
 .slider::before {
-    content: "";
+    content: "☀️";
     position: absolute;
     height: 26px;
     width: 26px;
@@ -123,6 +123,11 @@ button:hover {
     background-color: white;
     border-radius: 50%;
     transition: 0.3s;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 14px;
 }
 
 .theme-switch input:checked + .slider {
@@ -131,6 +136,7 @@ button:hover {
 
 .theme-switch input:checked + .slider::before {
     transform: translateX(28px);
+    content: "🌙";
 }
 
 /* Chat page */
@@ -361,10 +367,12 @@ button:hover {
         width: 22px;
         left: 3px;
         top: 3px;
+        font-size: 12px;
     }
 
     .theme-switch input:checked + .slider::before {
         transform: translateX(24px);
+        content: "🌙";
     }
 
     .messages {
