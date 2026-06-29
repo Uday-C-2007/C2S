@@ -239,13 +239,43 @@ button:hover {
     margin-right: auto;
 }
 
+.image-message {
+    padding: 8px;
+}
+
+.image-label {
+    font-size: 13px;
+    margin-bottom: 6px;
+    opacity: 0.9;
+}
+
+.chat-photo {
+    display: block;
+    max-width: 260px;
+    max-height: 260px;
+    width: auto;
+    height: auto;
+    border-radius: 8px;
+    object-fit: cover;
+}
+
+/* Chat input */
 .chat-input {
     display: flex;
     border-top: 1px solid var(--border-color);
     flex-shrink: 0;
+    background: var(--input-bg);
 }
 
-.chat-input input {
+#photoBtn {
+    border-radius: 0;
+    background: var(--dark-button);
+    padding: 12px 14px;
+    margin: 0;
+    font-size: 20px;
+}
+
+.chat-input input[type="text"] {
     flex: 1;
     min-width: 0;
     padding: 14px;
@@ -258,6 +288,7 @@ button:hover {
 
 .chat-input button {
     border-radius: 0;
+    margin: 0;
 }
 
 /* Confirm box */
@@ -392,7 +423,17 @@ button:hover {
         font-size: 14px;
     }
 
-    .chat-input input {
+    .chat-photo {
+        max-width: 220px;
+        max-height: 220px;
+    }
+
+    #photoBtn {
+        padding: 10px 12px;
+        font-size: 18px;
+    }
+
+    .chat-input input[type="text"] {
         font-size: 14px;
         padding: 12px;
     }
@@ -416,5 +457,10 @@ button:hover {
 
     .home h1 {
         font-size: 26px;
+    }
+
+    .chat-photo {
+        max-width: 190px;
+        max-height: 190px;
     }
 }

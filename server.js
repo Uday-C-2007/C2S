@@ -6,16 +6,23 @@ const path = require("path");
 
 const app = express();
 const server = http.createServer(app);
-const io = new Server(server);
+
+const io = new Server(server, {
+    maxHttpBufferSize: 10 * 1024 * 1024
+});
 
 app.use(express.static(__dirname));
 
 let waitingUser = null;
 const partners = new Map();
 const lastMessageTime = new Map();
+const lastImageTime = new Map();
 
 const MAX_MESSAGE_LENGTH = 1000;
 const MESSAGE_DELAY = 700;
+
+const MAX_IMAGE_DATA_LENGTH = 7 * 1024 * 1024;
+const IMAGE_DELAY = 1500;
 
 const REPORT_FILE = path.join(__dirname, "reports.txt");
 
@@ -106,6 +113,38 @@ function isMessageAllowed(socket, message) {
     return true;
 }
 
+function isImageAllowed(socket, imageData) {
+    if (typeof imageData !== "string") {
+        return false;
+    }
+
+    const allowedImage =
+        imageData.startsWith("data:image/jpeg;base64,") ||
+        imageData.startsWith("data:image/png;base64,") ||
+        imageData.startsWith("data:image/webp;base64,");
+
+    if (!allowedImage) {
+        socket.emit("warning", "Only JPG, PNG, and WEBP images are allowed.");
+        return false;
+    }
+
+    if (imageData.length > MAX_IMAGE_DATA_LENGTH) {
+        socket.emit("warning", "Image is too large. Please send an image below 5 MB.");
+        return false;
+    }
+
+    const now = Date.now();
+    const lastTime = lastImageTime.get(socket.id) || 0;
+
+    if (now - lastTime < IMAGE_DELAY) {
+        socket.emit("warning", "You are sending images too fast.");
+        return false;
+    }
+
+    lastImageTime.set(socket.id, now);
+    return true;
+}
+
 io.on("connection", function (socket) {
     console.log("User connected:", socket.id);
     updateOnlineUsers();
@@ -128,6 +167,21 @@ io.on("connection", function (socket) {
 
         const cleanMessage = message.trim();
         io.to(partnerId).emit("chatMessage", cleanMessage);
+    });
+
+    socket.on("imageMessage", function (imageData) {
+        const partnerId = partners.get(socket.id);
+
+        if (!partnerId) {
+            socket.emit("warning", "Please wait until a stranger connects.");
+            return;
+        }
+
+        if (!isImageAllowed(socket, imageData)) {
+            return;
+        }
+
+        io.to(partnerId).emit("imageMessage", imageData);
     });
 
     socket.on("typing", function (isTyping) {
@@ -176,6 +230,7 @@ io.on("connection", function (socket) {
 
         endCurrentChat(socket);
         lastMessageTime.delete(socket.id);
+        lastImageTime.delete(socket.id);
 
         updateOnlineUsers();
     });

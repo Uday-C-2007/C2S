@@ -13,6 +13,9 @@ const leaveBtn = document.getElementById("leaveBtn");
 const statusText = document.getElementById("status");
 const onlineCount = document.getElementById("onlineCount");
 
+const photoBtn = document.getElementById("photoBtn");
+const photoInput = document.getElementById("photoInput");
+
 const confirmBox = document.getElementById("confirmBox");
 const confirmTitle = document.getElementById("confirmTitle");
 const confirmMessage = document.getElementById("confirmMessage");
@@ -28,6 +31,8 @@ let backButtonLocked = false;
 let typingTimer;
 let strangerTypingTimer;
 const TYPING_DELAY = 1000;
+
+const MAX_IMAGE_SIZE = 5 * 1024 * 1024;
 
 /* Theme setup */
 const savedTheme = localStorage.getItem("theme");
@@ -142,7 +147,7 @@ startBtn.addEventListener("click", function () {
     socket.emit("findStranger");
 });
 
-/* Send message */
+/* Send text message */
 sendBtn.addEventListener("click", function () {
     sendMessage();
 });
@@ -151,6 +156,51 @@ messageInput.addEventListener("keydown", function (event) {
     if (event.key === "Enter") {
         sendMessage();
     }
+});
+
+/* Send photo */
+photoBtn.addEventListener("click", function () {
+    if (!connectedToStranger) {
+        alert("Please wait until a stranger connects.");
+        return;
+    }
+
+    photoInput.click();
+});
+
+photoInput.addEventListener("change", function () {
+    const file = photoInput.files[0];
+
+    if (!file) {
+        return;
+    }
+
+    const allowedTypes = ["image/jpeg", "image/png", "image/webp"];
+
+    if (!allowedTypes.includes(file.type)) {
+        alert("Only JPG, PNG, and WEBP images are allowed.");
+        photoInput.value = "";
+        return;
+    }
+
+    if (file.size > MAX_IMAGE_SIZE) {
+        alert("Image is too large. Please select an image below 5 MB.");
+        photoInput.value = "";
+        return;
+    }
+
+    const reader = new FileReader();
+
+    reader.onload = function () {
+        const imageData = reader.result;
+
+        addImageMessage(imageData, "you", "You sent a photo");
+        socket.emit("imageMessage", imageData);
+
+        photoInput.value = "";
+    };
+
+    reader.readAsDataURL(file);
 });
 
 /* Typing indicator */
@@ -238,6 +288,26 @@ function addMessage(text, type) {
     messages.scrollTop = messages.scrollHeight;
 }
 
+function addImageMessage(imageData, type, label) {
+    const newMessage = document.createElement("div");
+    newMessage.classList.add("message", type, "image-message");
+
+    const imageLabel = document.createElement("div");
+    imageLabel.classList.add("image-label");
+    imageLabel.textContent = label;
+
+    const image = document.createElement("img");
+    image.src = imageData;
+    image.alt = "Chat photo";
+    image.classList.add("chat-photo");
+
+    newMessage.appendChild(imageLabel);
+    newMessage.appendChild(image);
+
+    messages.appendChild(newMessage);
+    messages.scrollTop = messages.scrollHeight;
+}
+
 /* Socket events */
 socket.on("waiting", function () {
     statusText.textContent = "Waiting for a stranger...";
@@ -251,6 +321,10 @@ socket.on("matched", function () {
 
 socket.on("chatMessage", function (message) {
     addMessage("Stranger: " + message, "stranger");
+});
+
+socket.on("imageMessage", function (imageData) {
+    addImageMessage(imageData, "stranger", "Stranger sent a photo");
 });
 
 socket.on("partnerLeft", function () {
