@@ -194,11 +194,14 @@ button:hover {
 }
 
 .status {
-    padding: 10px;
+    padding: 8px 10px;
     text-align: center;
     color: var(--muted-text);
-    border-bottom: 1px solid var(--border-color);
+    border-top: 1px solid var(--border-color);
+    border-bottom: none;
+    background: var(--card-color);
     flex-shrink: 0;
+    font-size: 14px;
 }
 
 .messages {
