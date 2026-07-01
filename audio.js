@@ -9,6 +9,8 @@ const backHomeBtn = document.getElementById("backHomeBtn");
 const audioStatus = document.getElementById("audioStatus");
 const remoteAudio = document.getElementById("remoteAudio");
 
+const audioThemeSwitch = document.getElementById("audioThemeSwitch");
+
 const audioConfirmBox = document.getElementById("audioConfirmBox");
 const audioConfirmTitle = document.getElementById("audioConfirmTitle");
 const audioConfirmMessage = document.getElementById("audioConfirmMessage");
@@ -32,6 +34,32 @@ const rtcConfig = {
         }
     ]
 };
+
+/* Theme setup */
+const savedTheme = localStorage.getItem("theme");
+
+if (savedTheme === "light") {
+    document.body.classList.add("light-mode");
+}
+
+updateAudioThemeSwitch();
+
+audioThemeSwitch.addEventListener("change", function () {
+    if (audioThemeSwitch.checked) {
+        document.body.classList.add("light-mode");
+        localStorage.setItem("theme", "light");
+    } else {
+        document.body.classList.remove("light-mode");
+        localStorage.setItem("theme", "dark");
+    }
+
+    updateAudioThemeSwitch();
+});
+
+function updateAudioThemeSwitch() {
+    const isLight = document.body.classList.contains("light-mode");
+    audioThemeSwitch.checked = isLight;
+}
 
 /* Device/browser back button control */
 window.history.pushState({ audioPage: true }, "", window.location.href);
