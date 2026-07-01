@@ -5,6 +5,7 @@ const muteBtn = document.getElementById("muteBtn");
 const nextAudioBtn = document.getElementById("nextAudioBtn");
 const reportAudioBtn = document.getElementById("reportAudioBtn");
 const leaveAudioBtn = document.getElementById("leaveAudioBtn");
+const backHomeBtn = document.getElementById("backHomeBtn");
 const audioStatus = document.getElementById("audioStatus");
 const remoteAudio = document.getElementById("remoteAudio");
 
@@ -180,6 +181,21 @@ leaveAudioBtn.addEventListener("click", function () {
             socket.emit("leaveAudio");
             resetFullAudioCall();
             audioStatus.textContent = "Audio call ended.";
+        }
+    );
+});
+
+/* Back Home button */
+backHomeBtn.addEventListener("click", function () {
+    showAudioConfirm(
+        "Go back home?",
+        "Do you want to go back to home page?",
+        "Confirm to Leave",
+        function () {
+            allowAudioPageExit = true;
+            socket.emit("leaveAudio");
+            resetFullAudioCall();
+            window.location.href = "index.html";
         }
     );
 });
