@@ -5,7 +5,6 @@ const muteBtn = document.getElementById("muteBtn");
 const nextAudioBtn = document.getElementById("nextAudioBtn");
 const reportAudioBtn = document.getElementById("reportAudioBtn");
 const leaveAudioBtn = document.getElementById("leaveAudioBtn");
-const backHomeBtn = document.getElementById("backHomeBtn");
 const audioStatus = document.getElementById("audioStatus");
 const remoteAudio = document.getElementById("remoteAudio");
 
@@ -20,6 +19,7 @@ let peerConnection = null;
 let isMuted = false;
 let hasAudioPartner = false;
 let audioConfirmAction = null;
+let allowAudioPageExit = false;
 
 const rtcConfig = {
     iceServers: [
@@ -32,6 +32,32 @@ const rtcConfig = {
     ]
 };
 
+/* Device/browser back button control */
+window.history.pushState({ audioPage: true }, "", window.location.href);
+
+window.addEventListener("popstate", function () {
+    if (allowAudioPageExit) {
+        return;
+    }
+
+    window.history.pushState({ audioPage: true }, "", window.location.href);
+
+    if (audioConfirmBox.style.display !== "flex") {
+        showAudioConfirm(
+            "Go back home?",
+            "Do you want to go back to home page?",
+            "Confirm to Leave",
+            function () {
+                allowAudioPageExit = true;
+                socket.emit("leaveAudio");
+                resetFullAudioCall();
+                window.location.href = "index.html";
+            }
+        );
+    }
+});
+
+/* Confirm popup */
 function showAudioConfirm(title, message, buttonText, action) {
     audioConfirmTitle.textContent = title;
     audioConfirmMessage.textContent = message;
@@ -56,6 +82,7 @@ audioConfirmActionBtn.addEventListener("click", function () {
     audioConfirmAction = null;
 });
 
+/* Start audio call */
 startAudioBtn.addEventListener("click", async function () {
     try {
         audioStatus.textContent = "Requesting microphone permission...";
@@ -81,6 +108,7 @@ startAudioBtn.addEventListener("click", async function () {
     }
 });
 
+/* Mute / Unmute */
 muteBtn.addEventListener("click", function () {
     if (!localStream) {
         return;
@@ -101,6 +129,7 @@ muteBtn.addEventListener("click", function () {
     }
 });
 
+/* Next audio stranger */
 nextAudioBtn.addEventListener("click", function () {
     showAudioConfirm(
         "Next audio stranger?",
@@ -118,6 +147,7 @@ nextAudioBtn.addEventListener("click", function () {
     );
 });
 
+/* Report audio stranger */
 reportAudioBtn.addEventListener("click", function () {
     if (!hasAudioPartner) {
         alert("No audio stranger to report.");
@@ -140,6 +170,7 @@ reportAudioBtn.addEventListener("click", function () {
     );
 });
 
+/* Leave audio call */
 leaveAudioBtn.addEventListener("click", function () {
     showAudioConfirm(
         "Leave audio call?",
@@ -153,23 +184,7 @@ leaveAudioBtn.addEventListener("click", function () {
     );
 });
 
-backHomeBtn.addEventListener("click", function () {
-    if (localStream || peerConnection) {
-        showAudioConfirm(
-            "Go back home?",
-            "Your audio call will be disconnected.",
-            "Confirm to Leave",
-            function () {
-                socket.emit("leaveAudio");
-                resetFullAudioCall();
-                window.location.href = "index.html";
-            }
-        );
-    } else {
-        window.location.href = "index.html";
-    }
-});
-
+/* WebRTC connection */
 function createPeerConnection() {
     if (peerConnection) {
         return;
@@ -249,6 +264,7 @@ function resetFullAudioCall() {
     hasAudioPartner = false;
 }
 
+/* Socket events */
 socket.on("audioWaiting", function () {
     audioStatus.textContent = "Waiting for an audio stranger...";
     hasAudioPartner = false;
@@ -329,6 +345,7 @@ socket.on("audioWarning", function (message) {
     audioStatus.textContent = message;
 });
 
+/* Page close / refresh */
 window.addEventListener("beforeunload", function () {
     socket.emit("leaveAudio");
 });
