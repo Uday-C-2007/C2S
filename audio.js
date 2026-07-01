@@ -1,17 +1,25 @@
 const socket = io();
 
-const roomInput = document.getElementById("roomInput");
-const joinAudioBtn = document.getElementById("joinAudioBtn");
-const leaveAudioBtn = document.getElementById("leaveAudioBtn");
+const startAudioBtn = document.getElementById("startAudioBtn");
 const muteBtn = document.getElementById("muteBtn");
+const nextAudioBtn = document.getElementById("nextAudioBtn");
+const reportAudioBtn = document.getElementById("reportAudioBtn");
+const leaveAudioBtn = document.getElementById("leaveAudioBtn");
 const backHomeBtn = document.getElementById("backHomeBtn");
 const audioStatus = document.getElementById("audioStatus");
 const remoteAudio = document.getElementById("remoteAudio");
 
+const audioConfirmBox = document.getElementById("audioConfirmBox");
+const audioConfirmTitle = document.getElementById("audioConfirmTitle");
+const audioConfirmMessage = document.getElementById("audioConfirmMessage");
+const audioConfirmActionBtn = document.getElementById("audioConfirmActionBtn");
+const audioCancelActionBtn = document.getElementById("audioCancelActionBtn");
+
 let localStream = null;
 let peerConnection = null;
-let currentRoom = "";
 let isMuted = false;
+let hasAudioPartner = false;
+let audioConfirmAction = null;
 
 const rtcConfig = {
     iceServers: [
@@ -24,14 +32,31 @@ const rtcConfig = {
     ]
 };
 
-joinAudioBtn.addEventListener("click", async function () {
-    const roomCode = roomInput.value.trim();
+function showAudioConfirm(title, message, buttonText, action) {
+    audioConfirmTitle.textContent = title;
+    audioConfirmMessage.textContent = message;
+    audioConfirmActionBtn.textContent = buttonText;
+    audioConfirmAction = action;
 
-    if (roomCode.length < 3) {
-        alert("Please enter a room code with at least 3 characters.");
-        return;
+    audioConfirmBox.style.display = "flex";
+}
+
+audioCancelActionBtn.addEventListener("click", function () {
+    audioConfirmBox.style.display = "none";
+    audioConfirmAction = null;
+});
+
+audioConfirmActionBtn.addEventListener("click", function () {
+    audioConfirmBox.style.display = "none";
+
+    if (audioConfirmAction) {
+        audioConfirmAction();
     }
 
+    audioConfirmAction = null;
+});
+
+startAudioBtn.addEventListener("click", async function () {
     try {
         audioStatus.textContent = "Requesting microphone permission...";
 
@@ -40,27 +65,20 @@ joinAudioBtn.addEventListener("click", async function () {
             video: false
         });
 
-        currentRoom = roomCode;
-
-        joinAudioBtn.disabled = true;
-        roomInput.disabled = true;
-        leaveAudioBtn.disabled = false;
+        startAudioBtn.disabled = true;
         muteBtn.disabled = false;
+        nextAudioBtn.disabled = false;
+        leaveAudioBtn.disabled = false;
+        reportAudioBtn.disabled = true;
 
-        audioStatus.textContent = "Joining audio room...";
-        socket.emit("joinAudioRoom", currentRoom);
+        audioStatus.textContent = "Searching for an audio stranger...";
+        socket.emit("findAudioStranger");
     } catch (error) {
         console.log(error);
         audioStatus.textContent = "Microphone permission denied.";
         alert("Please allow microphone permission to start audio call.");
-        resetAudioCall();
+        resetFullAudioCall();
     }
-});
-
-leaveAudioBtn.addEventListener("click", function () {
-    socket.emit("leaveAudioRoom");
-    resetAudioCall();
-    audioStatus.textContent = "Audio call ended.";
 });
 
 muteBtn.addEventListener("click", function () {
@@ -83,9 +101,73 @@ muteBtn.addEventListener("click", function () {
     }
 });
 
+nextAudioBtn.addEventListener("click", function () {
+    showAudioConfirm(
+        "Next audio stranger?",
+        "Current audio call will be disconnected. Do you want to find a new audio stranger?",
+        "Confirm Next",
+        function () {
+            closePeerConnection();
+
+            hasAudioPartner = false;
+            reportAudioBtn.disabled = true;
+            audioStatus.textContent = "Searching for a new audio stranger...";
+
+            socket.emit("nextAudio");
+        }
+    );
+});
+
+reportAudioBtn.addEventListener("click", function () {
+    if (!hasAudioPartner) {
+        alert("No audio stranger to report.");
+        return;
+    }
+
+    showAudioConfirm(
+        "Report this audio stranger?",
+        "This report will be saved and the call will be disconnected.",
+        "Confirm Report",
+        function () {
+            closePeerConnection();
+
+            hasAudioPartner = false;
+            reportAudioBtn.disabled = true;
+            audioStatus.textContent = "Submitting report...";
+
+            socket.emit("reportAudio");
+        }
+    );
+});
+
+leaveAudioBtn.addEventListener("click", function () {
+    showAudioConfirm(
+        "Leave audio call?",
+        "Do you want to leave this audio call?",
+        "Confirm to Leave",
+        function () {
+            socket.emit("leaveAudio");
+            resetFullAudioCall();
+            audioStatus.textContent = "Audio call ended.";
+        }
+    );
+});
+
 backHomeBtn.addEventListener("click", function () {
-    socket.emit("leaveAudioRoom");
-    window.location.href = "index.html";
+    if (localStream || peerConnection) {
+        showAudioConfirm(
+            "Go back home?",
+            "Your audio call will be disconnected.",
+            "Confirm to Leave",
+            function () {
+                socket.emit("leaveAudio");
+                resetFullAudioCall();
+                window.location.href = "index.html";
+            }
+        );
+    } else {
+        window.location.href = "index.html";
+    }
 });
 
 function createPeerConnection() {
@@ -136,15 +218,47 @@ function createPeerConnection() {
     };
 }
 
-socket.on("audioJoined", function (roomCode) {
-    audioStatus.textContent = "Joined room: " + roomCode;
-});
+function closePeerConnection() {
+    if (peerConnection) {
+        peerConnection.close();
+        peerConnection = null;
+    }
+
+    remoteAudio.srcObject = null;
+}
+
+function resetFullAudioCall() {
+    closePeerConnection();
+
+    if (localStream) {
+        localStream.getTracks().forEach(function (track) {
+            track.stop();
+        });
+
+        localStream = null;
+    }
+
+    startAudioBtn.disabled = false;
+    muteBtn.disabled = true;
+    nextAudioBtn.disabled = true;
+    reportAudioBtn.disabled = true;
+    leaveAudioBtn.disabled = true;
+
+    muteBtn.textContent = "Mute Mic";
+    isMuted = false;
+    hasAudioPartner = false;
+}
 
 socket.on("audioWaiting", function () {
-    audioStatus.textContent = "Waiting for another user to join same room code...";
+    audioStatus.textContent = "Waiting for an audio stranger...";
+    hasAudioPartner = false;
+    reportAudioBtn.disabled = true;
 });
 
-socket.on("audioReady", async function (data) {
+socket.on("audioMatched", async function (data) {
+    hasAudioPartner = true;
+    reportAudioBtn.disabled = false;
+
     createPeerConnection();
 
     audioStatus.textContent = "Connecting audio call...";
@@ -188,47 +302,33 @@ socket.on("audioIceCandidate", async function (candidate) {
 });
 
 socket.on("audioPartnerLeft", function () {
-    resetAudioCall();
-    audioStatus.textContent = "Other user left the audio call.";
+    closePeerConnection();
+
+    hasAudioPartner = false;
+    reportAudioBtn.disabled = true;
+
+    audioStatus.textContent = "Audio stranger left. Click Next to find a new audio stranger.";
 });
 
 socket.on("audioLeft", function () {
-    resetAudioCall();
+    resetFullAudioCall();
     audioStatus.textContent = "Audio call ended.";
+});
+
+socket.on("audioNotice", function (message) {
+    closePeerConnection();
+
+    hasAudioPartner = false;
+    reportAudioBtn.disabled = true;
+
+    audioStatus.textContent = message;
 });
 
 socket.on("audioWarning", function (message) {
     alert(message);
     audioStatus.textContent = message;
-    resetAudioCall();
 });
 
-function resetAudioCall() {
-    if (peerConnection) {
-        peerConnection.close();
-        peerConnection = null;
-    }
-
-    if (localStream) {
-        localStream.getTracks().forEach(function (track) {
-            track.stop();
-        });
-
-        localStream = null;
-    }
-
-    remoteAudio.srcObject = null;
-
-    joinAudioBtn.disabled = false;
-    roomInput.disabled = false;
-    leaveAudioBtn.disabled = true;
-    muteBtn.disabled = true;
-
-    muteBtn.textContent = "Mute Mic";
-    isMuted = false;
-    currentRoom = "";
-}
-
 window.addEventListener("beforeunload", function () {
-    socket.emit("leaveAudioRoom");
+    socket.emit("leaveAudio");
 });

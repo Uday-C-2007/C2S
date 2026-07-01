@@ -14,12 +14,13 @@ const io = new Server(server, {
 app.use(express.static(__dirname));
 
 let waitingUser = null;
+let waitingAudioUser = null;
+
 const partners = new Map();
+const audioPartners = new Map();
+
 const lastMessageTime = new Map();
 const lastImageTime = new Map();
-
-const audioRooms = new Map();
-const audioUserRooms = new Map();
 
 const MAX_MESSAGE_LENGTH = 1000;
 const MESSAGE_DELAY = 700;
@@ -29,7 +30,7 @@ const IMAGE_DELAY = 1500;
 
 const REPORT_FILE = path.join(__dirname, "reports.txt");
 
-function saveReport(reporterId, reportedId) {
+function saveTextReport(reporterId, reportedId) {
     const time = new Date().toLocaleString("en-IN", {
         timeZone: "Asia/Kolkata"
     });
@@ -43,9 +44,30 @@ function saveReport(reporterId, reportedId) {
 
     fs.appendFile(REPORT_FILE, reportLog, function (error) {
         if (error) {
-            console.log("Failed to save report:", error);
+            console.log("Failed to save text report:", error);
         } else {
-            console.log("Report saved to reports.txt");
+            console.log("Text report saved");
+        }
+    });
+}
+
+function saveAudioReport(reporterId, reportedId) {
+    const time = new Date().toLocaleString("en-IN", {
+        timeZone: "Asia/Kolkata"
+    });
+
+    const reportLog =
+        "Type: Audio Call Report\n" +
+        "Time: " + time + "\n" +
+        "Reporter: " + reporterId + "\n" +
+        "Reported: " + reportedId + "\n" +
+        "--------------------------\n";
+
+    fs.appendFile(REPORT_FILE, reportLog, function (error) {
+        if (error) {
+            console.log("Failed to save audio report:", error);
+        } else {
+            console.log("Audio report saved");
         }
     });
 }
@@ -57,6 +79,12 @@ function updateOnlineUsers() {
 function removeFromWaiting(socket) {
     if (waitingUser && waitingUser.id === socket.id) {
         waitingUser = null;
+    }
+}
+
+function removeFromAudioWaiting(socket) {
+    if (waitingAudioUser && waitingAudioUser.id === socket.id) {
+        waitingAudioUser = null;
     }
 }
 
@@ -75,6 +103,21 @@ function endCurrentChat(socket, notifyPartner = true) {
     removeFromWaiting(socket);
 }
 
+function endAudioCall(socket, notifyPartner = true) {
+    const partnerId = audioPartners.get(socket.id);
+
+    if (partnerId) {
+        audioPartners.delete(socket.id);
+        audioPartners.delete(partnerId);
+
+        if (notifyPartner) {
+            io.to(partnerId).emit("audioPartnerLeft");
+        }
+    }
+
+    removeFromAudioWaiting(socket);
+}
+
 function findStranger(socket) {
     removeFromWaiting(socket);
 
@@ -91,6 +134,33 @@ function findStranger(socket) {
         waitingUser = socket;
         socket.emit("waiting");
     }
+}
+
+function findAudioStranger(socket) {
+    removeFromAudioWaiting(socket);
+
+    if (waitingAudioUser && waitingAudioUser.id !== socket.id && waitingAudioUser.connected) {
+        const stranger = waitingAudioUser;
+        waitingAudioUser = null;
+
+        audioPartners.set(socket.id, stranger.id);
+        audioPartners.set(stranger.id, socket.id);
+
+        stranger.emit("audioMatched", {
+            initiator: true
+        });
+
+        socket.emit("audioMatched", {
+            initiator: false
+        });
+    } else {
+        waitingAudioUser = socket;
+        socket.emit("audioWaiting");
+    }
+}
+
+function getAudioPartnerId(socket) {
+    return audioPartners.get(socket.id);
 }
 
 function isMessageAllowed(socket, message) {
@@ -147,65 +217,6 @@ function isImageAllowed(socket, imageData) {
 
     lastImageTime.set(socket.id, now);
     return true;
-}
-
-function getAudioPartnerId(socket) {
-    const roomCode = audioUserRooms.get(socket.id);
-
-    if (!roomCode) {
-        return null;
-    }
-
-    const room = audioRooms.get(roomCode);
-
-    if (!room) {
-        return null;
-    }
-
-    for (const userId of room) {
-        if (userId !== socket.id) {
-            return userId;
-        }
-    }
-
-    return null;
-}
-
-function leaveAudioRoom(socket) {
-    const roomCode = audioUserRooms.get(socket.id);
-
-    if (!roomCode) {
-        return;
-    }
-
-    const room = audioRooms.get(roomCode);
-
-    if (room) {
-        room.delete(socket.id);
-
-        const partnerId = getAudioPartnerIdFromRoom(room, socket.id);
-
-        if (partnerId) {
-            io.to(partnerId).emit("audioPartnerLeft");
-        }
-
-        if (room.size === 0) {
-            audioRooms.delete(roomCode);
-        }
-    }
-
-    socket.leave("audio-" + roomCode);
-    audioUserRooms.delete(socket.id);
-}
-
-function getAudioPartnerIdFromRoom(room, socketId) {
-    for (const userId of room) {
-        if (userId !== socketId) {
-            return userId;
-        }
-    }
-
-    return null;
 }
 
 io.on("connection", function (socket) {
@@ -273,11 +284,7 @@ io.on("connection", function (socket) {
             return;
         }
 
-        console.log("Report received");
-        console.log("Reporter:", socket.id);
-        console.log("Reported user:", partnerId);
-
-        saveReport(socket.id, partnerId);
+        saveTextReport(socket.id, partnerId);
 
         socket.emit("warning", "Report submitted. Moving you to a new chat.");
         io.to(partnerId).emit("partnerLeft");
@@ -288,54 +295,38 @@ io.on("connection", function (socket) {
         findStranger(socket);
     });
 
-    socket.on("joinAudioRoom", function (roomCode) {
-        if (typeof roomCode !== "string") {
-            socket.emit("audioWarning", "Invalid room code.");
+    socket.on("findAudioStranger", function () {
+        endAudioCall(socket);
+        findAudioStranger(socket);
+    });
+
+    socket.on("nextAudio", function () {
+        endAudioCall(socket);
+        findAudioStranger(socket);
+    });
+
+    socket.on("leaveAudio", function () {
+        endAudioCall(socket);
+        socket.emit("audioLeft");
+    });
+
+    socket.on("reportAudio", function () {
+        const partnerId = getAudioPartnerId(socket);
+
+        if (!partnerId) {
+            socket.emit("audioWarning", "No audio stranger to report.");
             return;
         }
 
-        const cleanRoomCode = roomCode.trim().slice(0, 30);
+        saveAudioReport(socket.id, partnerId);
 
-        if (cleanRoomCode.length < 3) {
-            socket.emit("audioWarning", "Room code must be at least 3 characters.");
-            return;
-        }
+        socket.emit("audioNotice", "Audio report submitted. Searching for a new audio stranger.");
+        io.to(partnerId).emit("audioPartnerLeft");
 
-        leaveAudioRoom(socket);
+        audioPartners.delete(socket.id);
+        audioPartners.delete(partnerId);
 
-        let room = audioRooms.get(cleanRoomCode);
-
-        if (!room) {
-            room = new Set();
-            audioRooms.set(cleanRoomCode, room);
-        }
-
-        if (room.size >= 2) {
-            socket.emit("audioWarning", "This audio room is full. Try another room code.");
-            return;
-        }
-
-        room.add(socket.id);
-        audioUserRooms.set(socket.id, cleanRoomCode);
-        socket.join("audio-" + cleanRoomCode);
-
-        socket.emit("audioJoined", cleanRoomCode);
-
-        if (room.size === 1) {
-            socket.emit("audioWaiting");
-        }
-
-        if (room.size === 2) {
-            const users = Array.from(room);
-
-            io.to(users[0]).emit("audioReady", {
-                initiator: true
-            });
-
-            io.to(users[1]).emit("audioReady", {
-                initiator: false
-            });
-        }
+        findAudioStranger(socket);
     });
 
     socket.on("audioOffer", function (offer) {
@@ -362,16 +353,11 @@ io.on("connection", function (socket) {
         }
     });
 
-    socket.on("leaveAudioRoom", function () {
-        leaveAudioRoom(socket);
-        socket.emit("audioLeft");
-    });
-
     socket.on("disconnect", function () {
         console.log("User disconnected:", socket.id);
 
         endCurrentChat(socket);
-        leaveAudioRoom(socket);
+        endAudioCall(socket);
 
         lastMessageTime.delete(socket.id);
         lastImageTime.delete(socket.id);

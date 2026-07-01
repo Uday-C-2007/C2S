@@ -4,27 +4,28 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Audio Call - Chat To Strangers</title>
-    <link rel="stylesheet" href="audio.css">
+    <link rel="stylesheet" href="audio.css?v=300">
 </head>
 <body>
 
 <div class="audio-page">
     <div class="audio-card">
         <h1>Audio Call</h1>
-        <p>Enter same room code on two devices or two tabs to start a real audio call.</p>
+        <p>Talk with a random audio stranger instantly.</p>
 
-        <div class="room-box">
-            <input type="text" id="roomInput" placeholder="Enter room code">
-            <button id="joinAudioBtn">Join Audio Call</button>
-        </div>
-
-        <div class="audio-status" id="audioStatus">Not connected</div>
+        <div class="audio-status" id="audioStatus">Click Start Audio Call</div>
 
         <audio id="remoteAudio" autoplay playsinline></audio>
 
+        <div class="main-actions">
+            <button id="startAudioBtn">Start Audio Call</button>
+        </div>
+
         <div class="call-actions">
             <button id="muteBtn" disabled>Mute Mic</button>
-            <button id="leaveAudioBtn" disabled>Leave Call</button>
+            <button id="nextAudioBtn" disabled>Next</button>
+            <button id="reportAudioBtn" disabled>Report</button>
+            <button id="leaveAudioBtn" disabled>Leave</button>
             <button id="backHomeBtn">Back Home</button>
         </div>
 
@@ -32,8 +33,18 @@
     </div>
 </div>
 
+<div class="audio-confirm-box" id="audioConfirmBox">
+    <div class="audio-confirm-content">
+        <h3 id="audioConfirmTitle">Are you sure?</h3>
+        <p id="audioConfirmMessage">Do you want to continue?</p>
+
+        <button id="audioConfirmActionBtn">Confirm</button>
+        <button id="audioCancelActionBtn">Cancel</button>
+    </div>
+</div>
+
 <script src="/socket.io/socket.io.js"></script>
-<script src="audio.js"></script>
+<script src="audio.js?v=300"></script>
 
 </body>
 </html>

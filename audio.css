@@ -23,7 +23,7 @@ body {
 
 .audio-card {
     background: #1e1e1e;
-    width: min(420px, 100%);
+    width: min(430px, 100%);
     padding: 28px;
     border-radius: 15px;
     text-align: center;
@@ -39,20 +39,13 @@ body {
     line-height: 1.5;
 }
 
-.room-box {
-    display: flex;
-    gap: 8px;
+.audio-status {
     margin-top: 20px;
-}
-
-.room-box input {
-    flex: 1;
-    min-width: 0;
-    padding: 13px;
-    border: none;
-    outline: none;
+    padding: 12px;
+    background: #2b2b2b;
+    color: #cccccc;
     border-radius: 8px;
-    font-size: 15px;
+    min-height: 44px;
 }
 
 button {
@@ -63,6 +56,7 @@ button {
     border-radius: 8px;
     cursor: pointer;
     font-size: 15px;
+    margin: 4px;
 }
 
 button:disabled {
@@ -74,33 +68,36 @@ button:hover:enabled {
     transform: scale(1.03);
 }
 
-.audio-status {
+.main-actions {
     margin-top: 20px;
-    padding: 12px;
-    background: #2b2b2b;
-    color: #cccccc;
-    border-radius: 8px;
-    min-height: 44px;
 }
 
 .call-actions {
-    margin-top: 20px;
+    margin-top: 16px;
     display: flex;
-    gap: 8px;
+    gap: 6px;
     justify-content: center;
     flex-wrap: wrap;
 }
 
-#leaveAudioBtn {
+#muteBtn {
+    background: #0984e3;
+}
+
+#nextAudioBtn {
+    background: #222222;
+}
+
+#reportAudioBtn {
     background: #d63031;
 }
 
-#backHomeBtn {
+#leaveAudioBtn {
     background: #636e72;
 }
 
-#muteBtn {
-    background: #0984e3;
+#backHomeBtn {
+    background: #555555;
 }
 
 .small-note {
@@ -108,21 +105,53 @@ button:hover:enabled {
     font-size: 13px;
 }
 
+.audio-confirm-box {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.75);
+    justify-content: center;
+    align-items: center;
+    z-index: 999;
+    padding: 15px;
+}
+
+.audio-confirm-content {
+    background: #1e1e1e;
+    color: white;
+    padding: 25px;
+    border-radius: 12px;
+    text-align: center;
+    width: min(310px, 100%);
+}
+
+.audio-confirm-content h3 {
+    margin-top: 0;
+}
+
+.audio-confirm-content p {
+    color: #cccccc;
+}
+
+#audioConfirmActionBtn {
+    background: #d63031;
+}
+
+#audioCancelActionBtn {
+    background: #00b894;
+}
+
 @media (max-width: 480px) {
     .audio-card {
         padding: 22px;
     }
 
-    .room-box {
-        flex-direction: column;
-    }
-
-    .room-box input,
-    .room-box button {
-        width: 100%;
-    }
-
     .audio-card h1 {
         font-size: 28px;
+    }
+
+    button {
+        padding: 11px 12px;
+        font-size: 14px;
     }
 }
