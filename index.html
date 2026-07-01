@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chat To Strangers</title>
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="style.css?v=100">
 </head>
 <body>
 
@@ -14,6 +14,7 @@
     <p id="onlineCount">Online users: 0</p>
 
     <button id="startBtn">Start Chat</button>
+    <button id="audioCallBtn" onclick="window.location.href='audio.html'">Audio Call</button>
 
     <label class="theme-switch">
         <input type="checkbox" class="themeSwitch">
@@ -39,14 +40,14 @@
 
     <div class="messages" id="messages"></div>
 
-<div class="status" id="status">Searching...</div>
+    <div class="status" id="status">Searching...</div>
 
-<div class="chat-input">
-    <button id="photoBtn" title="Send photo">📷</button>
-    <input type="file" id="photoInput" accept="image/png, image/jpeg, image/webp" hidden>
-    <input type="text" id="messageInput" placeholder="Type your message..." maxlength="1000">
-    <button id="sendBtn">Send</button>
-</div>
+    <div class="chat-input">
+        <button id="photoBtn" title="Send photo">📷</button>
+        <input type="file" id="photoInput" accept="image/png, image/jpeg, image/webp" hidden>
+        <input type="text" id="messageInput" placeholder="Type your message..." maxlength="1000">
+        <button id="sendBtn">Send</button>
+    </div>
 </div>
 
 <div class="confirm-box" id="confirmBox">
@@ -60,7 +61,7 @@
 </div>
 
 <script src="/socket.io/socket.io.js"></script>
-<script src="script.js"></script>
+<script src="script.js?v=100"></script>
 
 </body>
 </html>

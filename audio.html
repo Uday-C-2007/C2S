@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Audio Call - Chat To Strangers</title>
+    <link rel="stylesheet" href="audio.css">
+</head>
+<body>
+
+<div class="audio-page">
+    <div class="audio-card">
+        <h1>Audio Call</h1>
+        <p>Enter same room code on two devices or two tabs to start a real audio call.</p>
+
+        <div class="room-box">
+            <input type="text" id="roomInput" placeholder="Enter room code">
+            <button id="joinAudioBtn">Join Audio Call</button>
+        </div>
+
+        <div class="audio-status" id="audioStatus">Not connected</div>
+
+        <audio id="remoteAudio" autoplay playsinline></audio>
+
+        <div class="call-actions">
+            <button id="muteBtn" disabled>Mute Mic</button>
+            <button id="leaveAudioBtn" disabled>Leave Call</button>
+            <button id="backHomeBtn">Back Home</button>
+        </div>
+
+        <p class="small-note">Browser will ask microphone permission. Click Allow.</p>
+    </div>
+</div>
+
+<script src="/socket.io/socket.io.js"></script>
+<script src="audio.js"></script>
+
+</body>
+</html>

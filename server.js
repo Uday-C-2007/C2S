@@ -18,6 +18,9 @@ const partners = new Map();
 const lastMessageTime = new Map();
 const lastImageTime = new Map();
 
+const audioRooms = new Map();
+const audioUserRooms = new Map();
+
 const MAX_MESSAGE_LENGTH = 1000;
 const MESSAGE_DELAY = 700;
 
@@ -32,6 +35,7 @@ function saveReport(reporterId, reportedId) {
     });
 
     const reportLog =
+        "Type: Text Chat Report\n" +
         "Time: " + time + "\n" +
         "Reporter: " + reporterId + "\n" +
         "Reported: " + reportedId + "\n" +
@@ -145,6 +149,65 @@ function isImageAllowed(socket, imageData) {
     return true;
 }
 
+function getAudioPartnerId(socket) {
+    const roomCode = audioUserRooms.get(socket.id);
+
+    if (!roomCode) {
+        return null;
+    }
+
+    const room = audioRooms.get(roomCode);
+
+    if (!room) {
+        return null;
+    }
+
+    for (const userId of room) {
+        if (userId !== socket.id) {
+            return userId;
+        }
+    }
+
+    return null;
+}
+
+function leaveAudioRoom(socket) {
+    const roomCode = audioUserRooms.get(socket.id);
+
+    if (!roomCode) {
+        return;
+    }
+
+    const room = audioRooms.get(roomCode);
+
+    if (room) {
+        room.delete(socket.id);
+
+        const partnerId = getAudioPartnerIdFromRoom(room, socket.id);
+
+        if (partnerId) {
+            io.to(partnerId).emit("audioPartnerLeft");
+        }
+
+        if (room.size === 0) {
+            audioRooms.delete(roomCode);
+        }
+    }
+
+    socket.leave("audio-" + roomCode);
+    audioUserRooms.delete(socket.id);
+}
+
+function getAudioPartnerIdFromRoom(room, socketId) {
+    for (const userId of room) {
+        if (userId !== socketId) {
+            return userId;
+        }
+    }
+
+    return null;
+}
+
 io.on("connection", function (socket) {
     console.log("User connected:", socket.id);
     updateOnlineUsers();
@@ -225,10 +288,91 @@ io.on("connection", function (socket) {
         findStranger(socket);
     });
 
+    socket.on("joinAudioRoom", function (roomCode) {
+        if (typeof roomCode !== "string") {
+            socket.emit("audioWarning", "Invalid room code.");
+            return;
+        }
+
+        const cleanRoomCode = roomCode.trim().slice(0, 30);
+
+        if (cleanRoomCode.length < 3) {
+            socket.emit("audioWarning", "Room code must be at least 3 characters.");
+            return;
+        }
+
+        leaveAudioRoom(socket);
+
+        let room = audioRooms.get(cleanRoomCode);
+
+        if (!room) {
+            room = new Set();
+            audioRooms.set(cleanRoomCode, room);
+        }
+
+        if (room.size >= 2) {
+            socket.emit("audioWarning", "This audio room is full. Try another room code.");
+            return;
+        }
+
+        room.add(socket.id);
+        audioUserRooms.set(socket.id, cleanRoomCode);
+        socket.join("audio-" + cleanRoomCode);
+
+        socket.emit("audioJoined", cleanRoomCode);
+
+        if (room.size === 1) {
+            socket.emit("audioWaiting");
+        }
+
+        if (room.size === 2) {
+            const users = Array.from(room);
+
+            io.to(users[0]).emit("audioReady", {
+                initiator: true
+            });
+
+            io.to(users[1]).emit("audioReady", {
+                initiator: false
+            });
+        }
+    });
+
+    socket.on("audioOffer", function (offer) {
+        const partnerId = getAudioPartnerId(socket);
+
+        if (partnerId) {
+            io.to(partnerId).emit("audioOffer", offer);
+        }
+    });
+
+    socket.on("audioAnswer", function (answer) {
+        const partnerId = getAudioPartnerId(socket);
+
+        if (partnerId) {
+            io.to(partnerId).emit("audioAnswer", answer);
+        }
+    });
+
+    socket.on("audioIceCandidate", function (candidate) {
+        const partnerId = getAudioPartnerId(socket);
+
+        if (partnerId) {
+            io.to(partnerId).emit("audioIceCandidate", candidate);
+        }
+    });
+
+    socket.on("leaveAudioRoom", function () {
+        leaveAudioRoom(socket);
+        socket.emit("audioLeft");
+    });
+
     socket.on("disconnect", function () {
         console.log("User disconnected:", socket.id);
 
         endCurrentChat(socket);
+        leaveAudioRoom(socket);
+
         lastMessageTime.delete(socket.id);
         lastImageTime.delete(socket.id);
 

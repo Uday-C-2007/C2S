@@ -1,0 +1,128 @@
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: #121212;
+    color: white;
+    min-height: 100dvh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 15px;
+}
+
+.audio-page {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.audio-card {
+    background: #1e1e1e;
+    width: min(420px, 100%);
+    padding: 28px;
+    border-radius: 15px;
+    text-align: center;
+}
+
+.audio-card h1 {
+    margin-top: 0;
+    font-size: 32px;
+}
+
+.audio-card p {
+    color: #cccccc;
+    line-height: 1.5;
+}
+
+.room-box {
+    display: flex;
+    gap: 8px;
+    margin-top: 20px;
+}
+
+.room-box input {
+    flex: 1;
+    min-width: 0;
+    padding: 13px;
+    border: none;
+    outline: none;
+    border-radius: 8px;
+    font-size: 15px;
+}
+
+button {
+    background: #00b894;
+    color: white;
+    border: none;
+    padding: 12px 14px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 15px;
+}
+
+button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+button:hover:enabled {
+    transform: scale(1.03);
+}
+
+.audio-status {
+    margin-top: 20px;
+    padding: 12px;
+    background: #2b2b2b;
+    color: #cccccc;
+    border-radius: 8px;
+    min-height: 44px;
+}
+
+.call-actions {
+    margin-top: 20px;
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+#leaveAudioBtn {
+    background: #d63031;
+}
+
+#backHomeBtn {
+    background: #636e72;
+}
+
+#muteBtn {
+    background: #0984e3;
+}
+
+.small-note {
+    margin-top: 18px;
+    font-size: 13px;
+}
+
+@media (max-width: 480px) {
+    .audio-card {
+        padding: 22px;
+    }
+
+    .room-box {
+        flex-direction: column;
+    }
+
+    .room-box input,
+    .room-box button {
+        width: 100%;
+    }
+
+    .audio-card h1 {
+        font-size: 28px;
+    }
+}
