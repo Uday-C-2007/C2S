@@ -3,48 +3,65 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Audio Call - Chat To Strangers</title>
-    <link rel="stylesheet" href="audio.css">
+    <title>Chat To Strangers</title>
+    <link rel="stylesheet" href="style.css?v=300">
 </head>
 <body>
 
-<div class="audio-page">
-    <div class="audio-card">
-        <h1>Audio Call</h1>
-        <p>Talk with a random audio stranger instantly.</p>
+<div class="home" id="home">
+    <h1>Chat To Strangers</h1>
+    <p>Meet new people. Start chatting instantly.</p>
+    <p id="onlineCount">Online users: 0</p>
 
-        <div class="audio-status" id="audioStatus">Click Start Audio Call</div>
+    <button id="startBtn">Start Chat</button>
+    <button id="audioCallBtn" onclick="window.location.href='audio.html'">Audio Call</button>
 
-        <audio id="remoteAudio" autoplay playsinline></audio>
+    <label class="theme-switch">
+        <input type="checkbox" class="themeSwitch">
+        <span class="slider"></span>
+    </label>
+</div>
 
-        <div class="main-actions">
-            <button id="startAudioBtn">Start Audio Call</button>
+<div class="chat-container" id="chatContainer">
+    <div class="chat-header">
+        <h2>Chat To Strangers</h2>
+
+        <div class="chat-actions">
+            <label class="theme-switch">
+                <input type="checkbox" class="themeSwitch">
+                <span class="slider"></span>
+            </label>
+
+            <button id="reportBtn">Report</button>
+            <button id="nextBtn">Next</button>
+            <button id="leaveBtn">Leave</button>
         </div>
+    </div>
 
-        <div class="call-actions">
-            <button id="muteBtn" disabled>Mute Mic</button>
-            <button id="nextAudioBtn" disabled>Next</button>
-            <button id="reportAudioBtn" disabled>Report</button>
-            <button id="leaveAudioBtn" disabled>Leave</button>
-            <button id="backHomeBtn">Back Home</button>
-        </div>
+    <div class="messages" id="messages"></div>
 
-        <p class="small-note">Browser will ask microphone permission. Click Allow.</p>
+    <div class="status" id="status">Searching...</div>
+
+    <div class="chat-input">
+        <button id="photoBtn" title="Send photo">📷</button>
+        <input type="file" id="photoInput" accept="image/png, image/jpeg, image/webp" hidden>
+        <input type="text" id="messageInput" placeholder="Type your message..." maxlength="1000">
+        <button id="sendBtn">Send</button>
     </div>
 </div>
 
-<div class="audio-confirm-box" id="audioConfirmBox">
-    <div class="audio-confirm-content">
-        <h3 id="audioConfirmTitle">Are you sure?</h3>
-        <p id="audioConfirmMessage">Do you want to continue?</p>
+<div class="confirm-box" id="confirmBox">
+    <div class="confirm-content">
+        <h3 id="confirmTitle">Are you sure?</h3>
+        <p id="confirmMessage">Do you want to continue?</p>
 
-        <button id="audioConfirmActionBtn">Confirm</button>
-        <button id="audioCancelActionBtn">Cancel</button>
+        <button id="confirmActionBtn">Confirm</button>
+        <button id="cancelActionBtn">Cancel</button>
     </div>
 </div>
 
 <script src="/socket.io/socket.io.js"></script>
-<script src="audio.js"></script>
+<script src="script.js?v=300"></script>
 
 </body>
 </html>
