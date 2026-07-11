@@ -470,3 +470,55 @@ button:hover {
 #audioCallBtn {
     background: #0984e3;
 }
+.policy-page {
+    max-width: 850px;
+    margin: 30px auto;
+    padding: 25px;
+    background: var(--card-bg, #1e1e1e);
+    color: var(--text-color, white);
+    border-radius: 14px;
+    line-height: 1.7;
+}
+
+.policy-page h1 {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.policy-page h2 {
+    margin-top: 22px;
+    color: #00b894;
+}
+
+.policy-page p {
+    color: var(--text-color, #dddddd);
+}
+
+.back-link {
+    display: inline-block;
+    margin-top: 25px;
+    background: #00b894;
+    color: white;
+    padding: 12px 18px;
+    border-radius: 8px;
+    text-decoration: none;
+}
+
+.footer-links {
+    position: fixed;
+    bottom: 10px;
+    left: 0;
+    width: 100%;
+    text-align: center;
+    font-size: 13px;
+}
+
+.footer-links a {
+    color: #00b894;
+    text-decoration: none;
+    margin: 0 6px;
+}
+
+.footer-links a:hover {
+    text-decoration: underline;
+}
