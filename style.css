@@ -522,3 +522,70 @@ button:hover {
 .footer-links a:hover {
     text-decoration: underline;
 }
+.top-dot-menu {
+    position: fixed;
+    top: 12px;
+    right: 14px;
+    z-index: 2000;
+}
+
+.top-dot-menu summary {
+    list-style: none;
+    width: 42px;
+    height: 42px;
+    background: rgba(0, 0, 0, 0.55);
+    color: white;
+    border-radius: 50%;
+    font-size: 28px;
+    line-height: 42px;
+    text-align: center;
+    cursor: pointer;
+    user-select: none;
+}
+
+.top-dot-menu summary::-webkit-details-marker {
+    display: none;
+}
+
+.top-menu-dropdown {
+    position: absolute;
+    top: 50px;
+    right: 0;
+    width: 165px;
+    background: #1e1e1e;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.45);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.top-menu-dropdown a {
+    display: block;
+    padding: 13px 15px;
+    color: white;
+    text-decoration: none;
+    font-size: 15px;
+}
+
+.top-menu-dropdown a:hover {
+    background: #00b894;
+    color: white;
+}
+
+body.light-mode .top-dot-menu summary {
+    background: rgba(255, 255, 255, 0.9);
+    color: #111111;
+}
+
+body.light-mode .top-menu-dropdown {
+    background: white;
+}
+
+body.light-mode .top-menu-dropdown a {
+    color: #111111;
+}
+
+body.light-mode .top-menu-dropdown a:hover {
+    background: #00b894;
+    color: white;
+}
