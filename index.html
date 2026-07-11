@@ -25,11 +25,14 @@
     <meta property="og:type" content="website">
     <meta property="og:site_name" content="Talk and Chat">
 
-    <link rel="stylesheet" href="style.css?v=500">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#00b894">
+
+    <link rel="stylesheet" href="style.css?v=800">
 </head>
 <body>
 
-    <details class="top-dot-menu">
+<details class="top-dot-menu">
     <summary>⋮</summary>
 
     <div class="top-menu-dropdown">
@@ -77,7 +80,9 @@
     <div class="chat-input">
         <button id="photoBtn" title="Send photo">📷</button>
         <input type="file" id="photoInput" accept="image/png, image/jpeg, image/webp" hidden>
+
         <input type="text" id="messageInput" placeholder="Type your message..." maxlength="1000">
+
         <button id="sendBtn">Send</button>
     </div>
 </div>
@@ -93,7 +98,13 @@
 </div>
 
 <script src="/socket.io/socket.io.js"></script>
-<script src="script.js?v=300"></script>
+<script src="script.js?v=800"></script>
+
+<script>
+    if ("serviceWorker" in navigator) {
+        navigator.serviceWorker.register("/service-worker.js");
+    }
+</script>
 
 </body>
 </html>
