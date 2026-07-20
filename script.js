@@ -1,33 +1,20 @@
 const socket = io();
 
-const homePage = document.getElementById("homePage");
-const chatPage = document.getElementById("chatPage");
-
 const startBtn = document.getElementById("startBtn");
-const audioCallBtn = document.getElementById("audioCallBtn");
-
-const themeToggle = document.getElementById("themeToggle");
-const chatThemeToggle = document.getElementById("chatThemeToggle");
-const themeIcon = document.getElementById("themeIcon");
-const chatThemeIcon = document.getElementById("chatThemeIcon");
-
-const homeMenuBtn = document.getElementById("homeMenuBtn");
-const homeMenuDropdown = document.getElementById("homeMenuDropdown");
-const chatMenuBtn = document.getElementById("chatMenuBtn");
-const chatMenuDropdown = document.getElementById("chatMenuDropdown");
-
-const messages = document.getElementById("messages");
-const statusBox = document.getElementById("status");
+const home = document.getElementById("home");
+const chatContainer = document.getElementById("chatContainer");
 
 const messageInput = document.getElementById("messageInput");
 const sendBtn = document.getElementById("sendBtn");
-
-const imageBtn = document.getElementById("imageBtn");
-const imageInput = document.getElementById("imageInput");
-
-const reportBtn = document.getElementById("reportBtn");
+const messages = document.getElementById("messages");
 const nextBtn = document.getElementById("nextBtn");
+const reportBtn = document.getElementById("reportBtn");
 const leaveBtn = document.getElementById("leaveBtn");
+const statusText = document.getElementById("status");
+const onlineCount = document.getElementById("onlineCount");
+
+const photoBtn = document.getElementById("photoBtn");
+const photoInput = document.getElementById("photoInput");
 
 const confirmBox = document.getElementById("confirmBox");
 const confirmTitle = document.getElementById("confirmTitle");
@@ -35,284 +22,349 @@ const confirmMessage = document.getElementById("confirmMessage");
 const confirmActionBtn = document.getElementById("confirmActionBtn");
 const cancelActionBtn = document.getElementById("cancelActionBtn");
 
-let currentConfirmAction = null;
-let chatStarted = false;
+const themeSwitches = document.querySelectorAll(".themeSwitch");
 
-function setStatus(text) {
-    statusBox.textContent = text;
+let connectedToStranger = false;
+let confirmAction = null;
+let backButtonLocked = false;
+
+let typingTimer;
+let strangerTypingTimer;
+const TYPING_DELAY = 1000;
+
+const MAX_IMAGE_SIZE = 5 * 1024 * 1024;
+
+/* Theme setup */
+const savedTheme = localStorage.getItem("theme");
+
+if (savedTheme === "light") {
+    document.body.classList.add("light-mode");
 }
 
-function scrollBottom() {
-    messages.scrollTop = messages.scrollHeight;
+updateThemeSwitches();
+
+themeSwitches.forEach(function (themeSwitch) {
+    themeSwitch.addEventListener("change", function () {
+        if (themeSwitch.checked) {
+            document.body.classList.add("light-mode");
+            localStorage.setItem("theme", "light");
+        } else {
+            document.body.classList.remove("light-mode");
+            localStorage.setItem("theme", "dark");
+        }
+
+        updateThemeSwitches();
+    });
+});
+
+function updateThemeSwitches() {
+    const isLight = document.body.classList.contains("light-mode");
+
+    themeSwitches.forEach(function (themeSwitch) {
+        themeSwitch.checked = isLight;
+    });
 }
 
-function addMessage(text, type = "system") {
-    const div = document.createElement("div");
-    div.className = `message ${type}`;
-    div.textContent = text;
-    messages.appendChild(div);
-    scrollBottom();
+/* Back button control */
+function lockBackButton() {
+    if (!backButtonLocked) {
+        window.history.pushState({ chatOpen: true }, "", window.location.href);
+        backButtonLocked = true;
+    }
 }
 
-function addImage(src, type = "you") {
-    const div = document.createElement("div");
-    div.className = `message ${type}`;
-
-    const img = document.createElement("img");
-    img.src = src;
-    img.alt = "sent image";
-
-    div.appendChild(img);
-    messages.appendChild(div);
-    scrollBottom();
+function unlockBackButton() {
+    backButtonLocked = false;
 }
 
-function showConfirm(title, message, action) {
+window.addEventListener("popstate", function () {
+    if (chatContainer.style.display === "flex") {
+        window.history.pushState({ chatOpen: true }, "", window.location.href);
+
+        if (confirmBox.style.display !== "flex") {
+            showConfirm(
+                "Leave this chat?",
+                "Do you want to go back to home page?",
+                "Confirm to Leave",
+                function () {
+                    socket.emit("leave");
+                }
+            );
+        }
+    }
+});
+
+/* Confirm popup */
+function showConfirm(title, message, buttonText, action) {
     confirmTitle.textContent = title;
     confirmMessage.textContent = message;
-    currentConfirmAction = action;
-    confirmBox.classList.remove("hidden");
+    confirmActionBtn.textContent = buttonText;
+    confirmAction = action;
+
+    confirmBox.style.display = "flex";
 }
 
-function hideConfirm() {
-    confirmBox.classList.add("hidden");
-    currentConfirmAction = null;
-}
-
-confirmActionBtn.addEventListener("click", () => {
-    if (currentConfirmAction) currentConfirmAction();
-    hideConfirm();
+cancelActionBtn.addEventListener("click", function () {
+    confirmBox.style.display = "none";
+    confirmAction = null;
 });
 
-cancelActionBtn.addEventListener("click", hideConfirm);
+confirmActionBtn.addEventListener("click", function () {
+    confirmBox.style.display = "none";
 
-function applyTheme(mode) {
-    if (mode === "light") {
-        document.body.classList.add("light-mode");
-        themeIcon.textContent = "🌙";
-        chatThemeIcon.textContent = "🌙";
-    } else {
-        document.body.classList.remove("light-mode");
-        themeIcon.textContent = "☀️";
-        chatThemeIcon.textContent = "☀️";
+    if (confirmAction) {
+        confirmAction();
     }
 
-    localStorage.setItem("theme", mode);
-}
-
-function toggleTheme() {
-    const isLight = document.body.classList.contains("light-mode");
-    applyTheme(isLight ? "dark" : "light");
-}
-
-applyTheme(localStorage.getItem("theme") || "dark");
-
-themeToggle.addEventListener("click", toggleTheme);
-chatThemeToggle.addEventListener("click", toggleTheme);
-
-homeMenuBtn.addEventListener("click", (e) => {
-    e.stopPropagation();
-    homeMenuDropdown.classList.toggle("hidden");
+    confirmAction = null;
 });
 
-chatMenuBtn.addEventListener("click", (e) => {
-    e.stopPropagation();
-    chatMenuDropdown.classList.toggle("hidden");
-});
+function goToHomePage() {
+    connectedToStranger = false;
 
-document.addEventListener("click", () => {
-    homeMenuDropdown.classList.add("hidden");
-    chatMenuDropdown.classList.add("hidden");
-});
-
-startBtn.addEventListener("click", () => {
-    homePage.classList.add("hidden");
-    chatPage.classList.remove("hidden");
+    confirmBox.style.display = "none";
+    chatContainer.style.display = "none";
+    home.style.display = "block";
 
     messages.innerHTML = "";
-    chatStarted = true;
+    messageInput.value = "";
+    statusText.textContent = "Searching...";
 
-    setStatus("Searching for stranger...");
-    addMessage("System: Searching for stranger...", "system");
+    unlockBackButton();
+}
 
-    history.pushState({ chat: true }, "", "#chat");
+/* Start chat */
+startBtn.addEventListener("click", function () {
+    home.style.display = "none";
+    chatContainer.style.display = "flex";
+
+    messages.innerHTML = "";
+    statusText.textContent = "Searching for a stranger...";
+    connectedToStranger = false;
+
+    lockBackButton();
 
     socket.emit("findStranger");
 });
 
-audioCallBtn.addEventListener("click", () => {
-    window.location.href = "audio.html";
+/* Send text message */
+sendBtn.addEventListener("click", function () {
+    sendMessage();
 });
 
-sendBtn.addEventListener("click", sendMessage);
-
-messageInput.addEventListener("keydown", (e) => {
-    if (e.key === "Enter") sendMessage();
+messageInput.addEventListener("keydown", function (event) {
+    if (event.key === "Enter") {
+        sendMessage();
+    }
 });
 
-function sendMessage() {
-    const text = messageInput.value.trim();
-
-    if (!text) return;
-
-    addMessage("You: " + text, "you");
-    socket.emit("sendMessage", text);
-
-    messageInput.value = "";
-}
-
-imageBtn.addEventListener("click", () => {
-    imageInput.click();
-});
-
-imageInput.addEventListener("change", () => {
-    const file = imageInput.files[0];
-
-    if (!file) return;
-
-    const allowedTypes = ["image/png", "image/jpeg", "image/webp"];
-
-    if (!allowedTypes.includes(file.type)) {
-        addMessage("System: Only JPG, PNG, and WEBP images are allowed.", "system");
-        imageInput.value = "";
+/* Send photo */
+photoBtn.addEventListener("click", function () {
+    if (!connectedToStranger) {
+        alert("Please wait until a stranger connects.");
         return;
     }
 
-    if (file.size > 5 * 1024 * 1024) {
-        addMessage("System: Image size must be below 5 MB.", "system");
-        imageInput.value = "";
+    photoInput.click();
+});
+
+photoInput.addEventListener("change", function () {
+    const file = photoInput.files[0];
+
+    if (!file) {
+        return;
+    }
+
+    const allowedTypes = ["image/jpeg", "image/png", "image/webp"];
+
+    if (!allowedTypes.includes(file.type)) {
+        alert("Only JPG, PNG, and WEBP images are allowed.");
+        photoInput.value = "";
+        return;
+    }
+
+    if (file.size > MAX_IMAGE_SIZE) {
+        alert("Image is too large. Please select an image below 5 MB.");
+        photoInput.value = "";
         return;
     }
 
     const reader = new FileReader();
 
-    reader.onload = () => {
+    reader.onload = function () {
         const imageData = reader.result;
 
-        addImage(imageData, "you");
+        addImageMessage(imageData, "you", "You sent a photo");
+        socket.emit("imageMessage", imageData);
 
-        socket.emit("sendImage", {
-            image: imageData,
-            name: file.name,
-            type: file.type
-        });
+        photoInput.value = "";
     };
 
     reader.readAsDataURL(file);
-    imageInput.value = "";
 });
 
-nextBtn.addEventListener("click", () => {
-    showConfirm("Confirm to next", "Do you want to search for a new stranger?", () => {
-        messages.innerHTML = "";
-        setStatus("Searching for new stranger...");
-        addMessage("System: Searching for new stranger...", "system");
-        socket.emit("nextStranger");
-    });
-});
-
-reportBtn.addEventListener("click", () => {
-    showConfirm("Confirm to report", "Do you want to report this stranger?", () => {
-        setStatus("Report submitted. Searching for new stranger...");
-        addMessage("System: Report submitted. Searching for new stranger...", "system");
-        socket.emit("reportUser");
-    });
-});
-
-leaveBtn.addEventListener("click", () => {
-    showConfirm("Confirm to leave", "Do you want to leave the chat?", () => {
-        leaveChat();
-    });
-});
-
-function leaveChat() {
-    socket.emit("leaveChat");
-
-    chatStarted = false;
-    messages.innerHTML = "";
-
-    chatPage.classList.add("hidden");
-    homePage.classList.remove("hidden");
-
-    setStatus("Click Start Chat to begin.");
-
-    if (location.hash === "#chat") {
-        history.pushState(null, "", location.pathname);
+/* Typing indicator */
+messageInput.addEventListener("input", function () {
+    if (!connectedToStranger) {
+        return;
     }
+
+    socket.emit("typing", true);
+
+    clearTimeout(typingTimer);
+
+    typingTimer = setTimeout(function () {
+        socket.emit("typing", false);
+    }, TYPING_DELAY);
+});
+
+/* Next stranger */
+nextBtn.addEventListener("click", function () {
+    showConfirm(
+        "Next stranger?",
+        "Current stranger will be disconnected. Do you want to find a new stranger?",
+        "Confirm Next",
+        function () {
+            messages.innerHTML = "";
+            statusText.textContent = "Searching for a new stranger...";
+            connectedToStranger = false;
+
+            socket.emit("next");
+        }
+    );
+});
+
+/* Report */
+reportBtn.addEventListener("click", function () {
+    showConfirm(
+        "Report this stranger?",
+        "This report will be saved and you will be moved to a new chat.",
+        "Confirm Report",
+        function () {
+            socket.emit("report");
+        }
+    );
+});
+
+/* Leave */
+leaveBtn.addEventListener("click", function () {
+    showConfirm(
+        "Leave this chat?",
+        "If you leave, this stranger will be disconnected.",
+        "Confirm to Leave",
+        function () {
+            socket.emit("leave");
+        }
+    );
+});
+
+function sendMessage() {
+    const text = messageInput.value.trim();
+
+    if (text === "") {
+        return;
+    }
+
+    if (!connectedToStranger) {
+        alert("Please wait until a stranger connects.");
+        return;
+    }
+
+    addMessage("You: " + text, "you");
+
+    socket.emit("chatMessage", text);
+    socket.emit("typing", false);
+    clearTimeout(typingTimer);
+
+    messageInput.value = "";
 }
 
-window.addEventListener("popstate", () => {
-    if (chatStarted && !chatPage.classList.contains("hidden")) {
-        showConfirm("Confirm to leave", "Do you want to leave the chat and go home?", () => {
-            leaveChat();
-        });
+function addMessage(text, type) {
+    const newMessage = document.createElement("div");
+    newMessage.classList.add("message", type);
+    newMessage.textContent = text;
 
-        history.pushState({ chat: true }, "", "#chat");
+    messages.appendChild(newMessage);
+    messages.scrollTop = messages.scrollHeight;
+}
+
+function addImageMessage(imageData, type, label) {
+    const newMessage = document.createElement("div");
+    newMessage.classList.add("message", type, "image-message");
+
+    const imageLabel = document.createElement("div");
+    imageLabel.classList.add("image-label");
+    imageLabel.textContent = label;
+
+    const image = document.createElement("img");
+    image.src = imageData;
+    image.alt = "Chat photo";
+    image.classList.add("chat-photo");
+
+    newMessage.appendChild(imageLabel);
+    newMessage.appendChild(image);
+
+    messages.appendChild(newMessage);
+    messages.scrollTop = messages.scrollHeight;
+}
+
+/* Socket events */
+socket.on("waiting", function () {
+    statusText.textContent = "Waiting for a stranger...";
+});
+
+socket.on("matched", function () {
+    connectedToStranger = true;
+    statusText.textContent = "Connected to a stranger";
+    addMessage("System: Stranger connected.", "stranger");
+});
+
+socket.on("chatMessage", function (message) {
+    addMessage("Stranger: " + message, "stranger");
+});
+
+socket.on("imageMessage", function (imageData) {
+    addImageMessage(imageData, "stranger", "Stranger sent a photo");
+});
+
+socket.on("partnerLeft", function () {
+    connectedToStranger = false;
+    statusText.textContent = "Stranger disconnected. Click Next.";
+    addMessage("System: Stranger left the chat.", "stranger");
+});
+
+socket.on("warning", function (message) {
+    alert(message);
+});
+
+socket.on("onlineUsers", function (count) {
+    onlineCount.textContent = "Online users: " + count;
+});
+
+socket.on("typing", function (isTyping) {
+    if (!connectedToStranger) {
+        return;
+    }
+
+    if (isTyping) {
+        statusText.textContent = "Stranger is typing...";
+
+        clearTimeout(strangerTypingTimer);
+
+        strangerTypingTimer = setTimeout(function () {
+            if (connectedToStranger) {
+                statusText.textContent = "Connected to a stranger";
+            }
+        }, 1500);
+    } else {
+        clearTimeout(strangerTypingTimer);
+
+        if (connectedToStranger) {
+            statusText.textContent = "Connected to a stranger";
+        }
     }
 });
 
-window.addEventListener("beforeunload", () => {
-    if (chatStarted) {
-        socket.emit("leaveChat");
-    }
-});
-
-/* SERVER EVENTS */
-
-socket.on("waiting", () => {
-    setStatus("Waiting for stranger...");
-    addMessage("System: Waiting for stranger...", "system");
-});
-
-socket.on("matched", () => {
-    setStatus("Stranger connected.");
-    addMessage("System: Stranger connected.", "system");
-});
-
-socket.on("strangerFound", () => {
-    setStatus("Stranger connected.");
-    addMessage("System: Stranger connected.", "system");
-});
-
-socket.on("receiveMessage", (msg) => {
-    addMessage("Stranger: " + msg, "stranger");
-});
-
-socket.on("strangerMessage", (msg) => {
-    addMessage("Stranger: " + msg, "stranger");
-});
-
-socket.on("receiveImage", (data) => {
-    if (typeof data === "string") {
-        addImage(data, "stranger");
-    } else if (data && data.image) {
-        addImage(data.image, "stranger");
-    }
-});
-
-socket.on("imageMessage", (data) => {
-    if (typeof data === "string") {
-        addImage(data, "stranger");
-    } else if (data && data.image) {
-        addImage(data.image, "stranger");
-    }
-});
-
-socket.on("partnerLeft", () => {
-    setStatus("Stranger disconnected. Click Next.");
-    addMessage("System: Stranger left the chat.", "system");
-});
-
-socket.on("strangerLeft", () => {
-    setStatus("Stranger disconnected. Click Next.");
-    addMessage("System: Stranger left the chat.", "system");
-});
-
-socket.on("reportSuccess", () => {
-    setStatus("Report submitted.");
-    addMessage("System: Report submitted.", "system");
-});
-
-socket.on("warning", (text) => {
-    addMessage("System: " + text, "system");
+socket.on("leftChat", function () {
+    goToHomePage();
 });
