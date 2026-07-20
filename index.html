@@ -5,106 +5,111 @@
 
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>Talk and Chat - Chat with Strangers Online</title>
+    <title>Talk and Chat - Chat with Strangers Online | Talkandchat</title>
 
-    <meta name="description" content="Talk and Chat is a free online platform to chat with random strangers instantly. Start anonymous text chat and audio call with new people online.">
+    <meta name="description" content="Talkandchat is a free online chat platform to chat with strangers. Start anonymous text chat and random audio chat with new people instantly.">
 
-    <meta name="keywords" content="talk and chat, talkandchat, talkandchat.in, chat with strangers, random chat, stranger chat, anonymous chat, online chat, audio chat">
-
-    <meta name="author" content="Talk and Chat">
+    <meta name="keywords" content="talkandchat, talk and chat, chat with strangers, stranger chat, online chat, anonymous chat, random chat, audio chat, meet new people">
 
     <meta name="robots" content="index, follow">
-
-    <meta name="google-site-verification" content="XpzTZg4Qmk8K9zJicz4gx5smJz9XB-TaFxgX5YXkodE" />
 
     <link rel="canonical" href="https://talkandchat.in/">
 
     <meta property="og:title" content="Talk and Chat - Chat with Strangers Online">
-    <meta property="og:description" content="Chat with random strangers online instantly. Free anonymous text chat and audio call.">
+    <meta property="og:description" content="Talkandchat lets you meet new people instantly with anonymous text chat and audio chat.">
     <meta property="og:url" content="https://talkandchat.in/">
     <meta property="og:type" content="website">
-    <meta property="og:site_name" content="Talk and Chat">
 
-    <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#00b894">
 
-    <link rel="stylesheet" href="style.css?v=800">
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" href="icon-512.png">
+
+    <link rel="stylesheet" href="style.css?v=500">
 </head>
 <body>
 
-<details class="top-dot-menu">
-    <summary>⋮</summary>
+    <!-- HOME PAGE -->
+    <div id="homePage" class="home-page">
+        <div class="home-card">
+            <h1>Talk and Chat</h1>
 
-    <div class="top-menu-dropdown">
-        <a href="privacy.html" target="_blank" rel="noopener noreferrer">Privacy</a>
-        <a href="terms.html" target="_blank" rel="noopener noreferrer">Terms</a>
-        <a href="safety.html" target="_blank" rel="noopener noreferrer">Safety</a>
-        <a href="contact.html" target="_blank" rel="noopener noreferrer">Contact</a>
-    </div>
-</details>
+            <p class="tagline">Meet new people. Start chatting instantly.</p>
 
-<div class="home" id="home">
-    <h1>Talk and Chat</h1>
-    <p>Meet new people. Start chatting instantly.</p>
-    <p id="onlineCount">Online users: 0</p>
+            <p class="seo-text">
+                Talkandchat is an online chat platform to meet new people through random text chat and audio chat.
+            </p>
 
-    <button id="startBtn">Start Chat</button>
-    <button id="audioCallBtn" onclick="window.location.href='audio.html'">Audio Call</button>
+            <div class="home-buttons">
+                <button id="startBtn">Start Chat</button>
+                <button id="audioCallBtn" onclick="window.location.href='audio.html'">Audio Call</button>
 
-    <label class="theme-switch">
-        <input type="checkbox" class="themeSwitch">
-        <span class="slider"></span>
-    </label>
-</div>
-
-<div class="chat-container" id="chatContainer">
-    <div class="chat-header">
-        <h2>Talk and Chat</h2>
-
-        <div class="chat-actions">
-            <label class="theme-switch">
-                <input type="checkbox" class="themeSwitch">
-                <span class="slider"></span>
-            </label>
-
-            <button id="reportBtn">Report</button>
-            <button id="nextBtn">Next</button>
-            <button id="leaveBtn">Leave</button>
+                <button id="themeToggle" class="theme-toggle" aria-label="Toggle theme">
+                    <span id="themeIcon">☀️</span>
+                </button>
+            </div>
         </div>
     </div>
 
-    <div class="messages" id="messages"></div>
+    <!-- CHAT PAGE -->
+    <div id="chatPage" class="chat-page hidden">
 
-    <div class="status" id="status">Searching...</div>
+        <div class="chat-header">
+            <div class="chat-title-row">
+                <h2>Talk and Chat</h2>
 
-    <div class="chat-input">
-        <button id="photoBtn" title="Send photo">📷</button>
-        <input type="file" id="photoInput" accept="image/png, image/jpeg, image/webp" hidden>
+                <div class="menu-wrapper">
+                    <button id="menuBtn" class="menu-btn" aria-label="Open menu">⋮</button>
 
-        <input type="text" id="messageInput" placeholder="Type your message..." maxlength="1000">
+                    <div id="menuDropdown" class="menu-dropdown hidden">
+                        <a href="privacy.html">Privacy</a>
+                        <a href="terms.html">Terms</a>
+                        <a href="safety.html">Safety</a>
+                        <a href="contact.html">Contact</a>
+                    </div>
+                </div>
+            </div>
 
-        <button id="sendBtn">Send</button>
+            <div class="chat-actions">
+                <button id="chatThemeToggle" class="theme-toggle small-theme" aria-label="Toggle theme">
+                    <span id="chatThemeIcon">☀️</span>
+                </button>
+
+                <button id="reportBtn" class="report-btn">Report</button>
+                <button id="nextBtn" class="next-btn">Next</button>
+                <button id="leaveBtn" class="leave-btn">Leave</button>
+            </div>
+        </div>
+
+        <div id="messages" class="messages"></div>
+
+        <div id="status" class="status">Click Start Chat to begin.</div>
+
+        <div class="chat-input">
+            <button id="imageBtn" class="image-btn">📷</button>
+            <input type="file" id="imageInput" accept="image/png, image/jpeg, image/webp" hidden>
+
+            <input type="text" id="messageInput" placeholder="Type your message..." autocomplete="off">
+
+            <button id="sendBtn">Send</button>
+        </div>
     </div>
-</div>
 
-<div class="confirm-box" id="confirmBox">
-    <div class="confirm-content">
-        <h3 id="confirmTitle">Are you sure?</h3>
-        <p id="confirmMessage">Do you want to continue?</p>
+    <!-- CONFIRM POPUP -->
+    <div class="confirm-box hidden" id="confirmBox">
+        <div class="confirm-content">
+            <h3 id="confirmTitle">Are you sure?</h3>
+            <p id="confirmMessage">Do you want to continue?</p>
 
-        <button id="confirmActionBtn">Confirm</button>
-        <button id="cancelActionBtn">Cancel</button>
+            <div class="confirm-buttons">
+                <button id="confirmActionBtn">Confirm</button>
+                <button id="cancelActionBtn">Cancel</button>
+            </div>
+        </div>
     </div>
-</div>
 
-<script src="/socket.io/socket.io.js"></script>
-<script src="script.js?v=800"></script>
-
-<script>
-    if ("serviceWorker" in navigator) {
-        navigator.serviceWorker.register("/service-worker.js");
-    }
-</script>
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="script.js?v=500"></script>
 
 </body>
 </html>
