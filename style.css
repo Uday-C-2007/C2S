@@ -589,3 +589,11 @@ body.light-mode .top-menu-dropdown a:hover {
     background: #00b894;
     color: white;
 }
+
+.brand-line {
+    color: #00b894;
+    font-size: 15px;
+    margin-top: -8px;
+    margin-bottom: 18px;
+    font-weight: 600;
+}
